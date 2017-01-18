@@ -1,0 +1,84 @@
+#! /usr/bin/python
+
+"""
+
+Assume that brilliance and jerk-ness are normally distributed
+among the population, and the two are unrelated. Further assume
+that there is a minimum threshold of brilliance to be successful
+in a field, but you need to be extra-brilliant to make up for
+being a jerk, and you might squeeze in with less brilliance if
+you're a nice person.
+
+Given that, generate graphs showing correlation and best fit
+lines for the entire population and the subset of people who are
+successful in the field.
+
+
+Copyright 2017 Alan De Smet
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+"""
+
+import numpy
+import matplotlib.pyplot as pyplot
+
+numpy.random.seed(0)
+
+size = 1000
+jerk = numpy.random.normal(size=size)
+genius = numpy.random.normal(size=size)
+value = genius - jerk
+success = value > 1.0
+unsuccessful = numpy.logical_not(success)
+
+def write_graph(success_only, filename):
+
+	fig, ax = pyplot.subplots()
+	ax.scatter(jerk[success], genius[success], c=(0,0,0))
+
+	line_range = numpy.array([-5.0,5.0])
+
+	if not success_only:
+		ax.scatter(jerk[unsuccessful], genius[unsuccessful], c=(0.8,0.8,0.8))
+		m,b = numpy.polyfit(jerk,genius,1)
+	else:
+		m,b = numpy.polyfit(jerk[success],genius[success],1)
+	ax.plot(line_range, m*line_range+b, '-', c=(1,0,0))
+
+	pyplot.ylim([-5,5])
+	pyplot.xlim([-5,5])
+	ax.set_xlabel("How big of a jerk are they?")
+	ax.set_ylabel("How brilliant are they?")
+
+	corellation_all = numpy.corrcoef(jerk, genius)[0,1]
+	corellation_success = numpy.corrcoef(jerk[success], genius[success])[0,1]
+
+	if not success_only:
+		ax.set_title("Everyone. Corellation {0:.3f}".format(corellation_all))
+	else:
+		ax.set_title("Successful People Only. Corellation {0:.3f}".format(corellation_success))
+	pyplot.savefig(filename)
+
+write_graph(True, "success.png")
+write_graph(False, "all.png")
+
